@@ -13,6 +13,12 @@ ways for inserting large amounts of data from code, which is encapsulated behind
 db.BulkInsert(rows);
 ```
 
+To insert rows asynchronously, use `BulkInsertAsync`:
+
+```csharp
+await db.BulkInsertAsync(rows);
+```
+
 ## Bulk Insert Implementations
 
 <bulk-paths>
@@ -39,6 +45,14 @@ db.BulkInsert(rows, new BulkInsertConfig {
 });
 ```
 
+To do the same asynchronously, with a cancellation token:
+
+```csharp
+await db.BulkInsertAsync(rows, new BulkInsertConfig {
+    Mode = BulkInsertMode.Sql
+}, token: cancellationToken);
+```
+
 ## Batch Size
 
 **Multiple Row Inserts** are sent in batches of **1000** (Maximum for SQL Server), Firebird uses a maximum of **256**
@@ -47,6 +61,40 @@ whilst other RDBMS's can be configured to use larger batch sizes:
 ```csharp
 db.BulkInsert(rows, new BulkInsertConfig {
     BatchSize = 1000
+});
+```
+
+Or asynchronously:
+
+```csharp
+await db.BulkInsertAsync(rows, new BulkInsertConfig {
+    BatchSize = 1000
+});
+```
+
+`BatchSize` controls SQL batches and SQL Server's `SqlBulkCopy`. It does not split native PostgreSQL or MySQL
+imports into batches.
+
+## CSV Mode
+
+`BulkInsertMode.Csv` is the default mode and uses the bulk import implementation available for each database provider:
+
+```csharp
+db.BulkInsert(rows, new BulkInsertConfig {
+    Mode = BulkInsertMode.Csv
+});
+```
+
+MySQL imports CSV data from a temporary file, and MySqlConnector uses a CSV stream. SQL Server uses `SqlBulkCopy`
+and PostgreSQL uses binary `COPY`. SQLite and Firebird use SQL batches.
+
+## Optimized Mode
+
+`BulkInsertMode.Optimized` currently uses the same provider-specific implementation as `BulkInsertMode.Csv`:
+
+```csharp
+db.BulkInsert(rows, new BulkInsertConfig {
+    Mode = BulkInsertMode.Optimized
 });
 ```
 
